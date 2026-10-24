@@ -12,12 +12,13 @@
 // Keep "nobody" last, so it catches everything the other rows miss.
 
 window.TABLE = {
-  // The HC-SR04 example. Replace these with your own signals and rows.
+  // The sensor notices whether the space in front of it is empty or occupied.
+  // A person under about 75 cm counts as close; farther than ~90 cm is clear.
   signals: ['present', 'near'],
 
   states: [
-    { name: 'close',  when: s => s.near > 0.85,   hold: 0.5 },
-    { name: 'here',   when: s => s.present > 0.5, hold: 1 },
-    { name: 'nobody', when: s => s.present < 0.2, hold: 2 },
+    { name: 'close',  when: s => s.near > 0.75,   hold: 0.5 },
+    { name: 'here',   when: s => s.present > 0.55, hold: 0.9 },
+    { name: 'nobody', when: s => s.present < 0.2,  hold: 1.5 },
   ],
 };

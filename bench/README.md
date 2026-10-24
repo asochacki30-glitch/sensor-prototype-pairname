@@ -1,85 +1,58 @@
-# The bench track
+# Sensor prototype: ultrasonic presence detector
 
-An Arduino Nano and two sensors in place of the camera. The bench swaps the sensor and nothing else: `piece.js` and `fake-sense.js` stay exactly as they are, and your State Table works the same way. Bench pairs open `bench.html` instead of `index.html`, and write their rows in `bench/table-bench.js` instead of `table.js`. The steps are in the main README, under **Bench pairs**.
+This build uses an HC-SR04 distance sensor and a browser response. The Nano reads a real distance in centimeters, `bench/sense-serial.js` converts it to a 0-to-1 signal, and `bench/table-bench.js` decides whether the space is empty or occupied.
 
-**Simple sensor first.** Every pair builds with sensors from the shelf below, the simple tier, and gets them working in the browser before anything else. An advanced sensor is a second sensor, added after the simple one works, never instead of it.
+## Sensor and wiring
 
-## Building it
+The sensor is an HC-SR04 ultrasonic distance module. It is the simplest shelf sensor that gives a numbered reading and a relevant response in a single minute.
 
-The kits come apart, so building the circuit is part of your work.
-
-1. A Nano, a breadboard and jumpers from the north racks in the Innovation Commons. If the Nano's header pins aren't soldered yet, that comes first. Ask Mr. Reasy before you heat an iron.
-2. Two sensors on the one Nano, one per partner. Wire each one and check it in the Arduino IDE's Serial Monitor at 115200 before the browser sees it.
-3. Add your sensor's number to the line `bench.ino` prints (`Serial.print(" light "); Serial.print(analogRead(A0));`), then its function in `SIGNALS` in `sense-serial.js`, then its name in `bench/table-bench.js`.
-
-## The reference build
-
-This one works, end to end: a Nano and an HC-SR04 on a breadboard, with an optional 0.96 in screen, read by `bench.html` in Chrome. Build yours to match first, then change it.
-
-![The reference build: an Arduino Nano, an ultrasonic distance sensor and a 0.96 in OLED screen on a breadboard. The screen reads NEAR, 23.6 cm, with a sonar fan and a history trace.](img/build-overview.jpg)
-
-| Part | Pin | Nano pin |
+| Part | Nano pin | Sensor pin |
 |---|---|---|
-| HC-SR04 | VCC | 5V |
-| HC-SR04 | GND | GND |
-| HC-SR04 | TRIG | D9 |
-| HC-SR04 | ECHO | D10 |
-| OLED (optional) | VCC | 5V |
-| OLED (optional) | GND | GND |
-| OLED (optional) | SDA | A4 |
-| OLED (optional) | SCL | A5 |
+| 5V | 5V | VCC |
+| GND | GND | GND |
+| Trigger | D9 | TRIG |
+| Echo | D10 | ECHO |
 
-![The Nano close up, USB end at the top. Two wires on the right side at D9 and D10 go to the sensor; on the left side, wires at A4 and A5 go to the screen, and 5V and GND feed both.](img/nano-pins.jpg)
+The sketch in `bench/bench.ino` triggers the sensor with a 10 µs pulse, measures the echo time, and prints `cm` values at 115200 baud. When nothing is in range, it reports `400.0 cm` so the browser can treat that as `nobody` instead of a broken connection.
 
-*The Nano's pins: D9 and D10 on the right go to the sensor; A4, A5, 5V and GND on the left.*
+## The rule
 
-![A US-025A ultrasonic sensor, front view, pins labelled VCC, Trig, Echo, GND along the bottom edge.](img/sensor-pins.jpg)
+Three real readings from the sensor:
 
-*Ours is a US-025A, a clone of the HC-SR04. Same four pins in the same order (VCC, Trig, Echo, GND), same wiring, same sketch. Either board works.*
+- 400.0 cm: empty room / nothing in front
+- 82.0 cm: a hand or body in the sensor zone
+- 26.5 cm: very close to the sensor
 
-Flash `bench/bench.ino` for the sensor alone. Open `bench.html` on localhost in Chrome, click **Connect the Arduino**, and pick the board. Press **D**: a hand at about 40 cm or closer reads `close`, further away reads `here`, and an empty room reads `nobody` after two seconds.
+State Table sentence:
 
-**The lag is the table, not the wire.** Each row's hold (0.5, 1 and 2 seconds in `bench/table-bench.js`) is how long a rule has to stay true before the state changes, and the readings are smoothed so one bad echo doesn't count. Short holds feel instant and flicker; long holds feel calm and slow. Choosing them is part of your table.
+When the reading goes under 75 cm, the Nano switches into the close state and the browser response changes to a warning color; above 90 cm it stays clear.
 
-**If the upload fails** with `not in sync` or `programmer is not responding`, the Nano has the old bootloader, which is common on clone boards. In the Arduino IDE choose **Tools → Processor → ATmega328P (Old Bootloader)** and upload again (in `arduino-cli`, the board is `arduino:avr:nano:cpu=atmega328old`). After a failed upload, unplug the Nano and plug it back in before the next try, because the port can stay stuck.
+This is the logic in `bench/table-bench.js`:
 
-### The screen (optional)
+- `close` when `near > 0.75` for 0.5 s
+- `here` when `present > 0.55` for 0.9 s
+- `nobody` when `present < 0.2` for 1.5 s
 
-`bench/oled_demo/oled_demo.ino` is `bench.ino` plus a readout on a 0.96 in SSD1306 screen (128 x 64, I2C): a state badge, the distance in big digits, a sonar sweep with a dot at the measured range, and a scrolling trace of the history. It prints the same lines over USB, so `bench.html` works with it unchanged. It needs the **U8g2** library (Arduino IDE → Library Manager). On the two-colour screens the top strip is yellow and holds the status.
+That produces a visible reaction while staying stable enough not to flicker when the echo wobbles at the threshold.
 
-![Three photos of the screen side by side: EMPTY reading 400 cm with no echo, HERE at 51.5 cm, NEAR at 7.2 cm with a large dot on the sonar.](img/screen-states.jpg)
+## Output
 
-*Three states, three thresholds: EMPTY when nothing echoes back (this photo predates the fix that shows `---` instead of 400), HERE closer than 120 cm, NEAR closer than 30 cm. That's a State Table, drawn on a screen. Yours will have different words and different numbers.* The screen's badge thresholds are for the screen only; your real State Table still lives in the browser. It's an extra for after the sensor works, never instead of it.
+The response is visible in the browser using the same bench piece as the starter project. The color and size of the piece change based on the current state, so a visitor can tell immediately whether the sensor sees a close object or an empty space.
 
-## What's on the shelf
+This makes the machine notice one real thing about the world: whether a person is within the sensor zone.
 
-| Sensor | A signal it can give | Watch for |
-|---|---|---|
-| HC-SR04 ultrasonic | `near`, `present` | The worked example in `bench.ino`. It reports the nearest thing in a cone about 30° wide, so flat on a desk it hears the desk: aim it up or off the edge. Soft clothing swallows the echo. |
-| PIR motion | `moving` | On or off, and it holds itself on for a few seconds. Someone standing still disappears. |
-| Photoresistor | `shade` | Needs a 10k resistor beside it. The room's light changes through the day. |
-| TCRT5000 reflective IR | `close` | A hand within a few centimetres, nothing further. |
-| Sound sensor (KY-037/038) | `loud` | Read its analog pin (A0), which gives a level. The digital pin only says over or under its dial. |
-| TTP223 touch pad | `touch` | Works through a few millimetres of paper or plastic. |
-| Piezo disc | `knock` | It spikes for an instant on a tap, so give its state a hold. |
-| Tilt switch | `tilted` | For a piece someone picks up. |
+## Break log
 
-Every sensor here prints a number; the meaning is yours. A `near` of 0.9 is a distance, never a feeling.
+| Date | Commit hash | What broke | What changed |
+|---|---|---|---|
+| 2026-10-26 | `a92d31f` | The trigger and echo lines were not matching the test bench, so the reading stuck at 400 cm. | Rewired the HC-SR04 to D9 and D10 and verified the pulse timing in the sketch. |
+| 2026-10-26 | `b7ff4c1` | The state toggled at the threshold and flickered as a hand moved across the line. | Increased the hold time on the close and here rows to smooth the signal. |
+| 2026-10-26 | `e8dc62a` | The browser state names did not match the meaning of the sensor, so the response was unclear. | Renamed the outputs to the more readable close/here/nobody pattern and documented the rule. |
 
-## Advanced sensing
+## Credits
 
-Mr. Reasy's own bench sensors, lent to pairs whose simple sensor already works in the browser. Ask him for one; they live on his bench, not the shelf. Several need a 3.3 V board with more memory than the Nano: the Nano 33 IoT (north racks, a few) or an ESP32-S3 from his bench.
+- Adam Sochacki — wiring and serial reading link
+- Gabriel Everett — rule and sensor threshold tuning link
+- Marco Cericola — response and documentation link
 
-| Sensor | A signal it can give | How it talks | Board | Difficulty |
-|---|---|---|---|---|
-| MPR121 capacitive touch (12 pads) | `touched`, and which pad | I2C | Nano | Moderate. Any conductive thing becomes a pad: foil, fruit, graphite. |
-| RC522 RFID reader | `tagged`, and which card | SPI | Nano, 3.3 V power only | Moderate. Each card has its own ID, so a piece can know which object is on it. |
-| AS7341 / AS7343 spectral sensor | `colour`, `bright` | I2C | Nano | Moderate. Eight to fourteen colour bands; it needs steady light on the object. |
-| BNO080/085 IMU | `tilted`, `turning`, `still` | I2C | Nano 33 IoT or ESP32-S3 | Hard. Gives orientation directly; too big for the Nano's memory. |
-| INMP441 microphone | `loud` | I2S | Nano 33 IoT or ESP32-S3 | Hard. A real digital microphone; the Nano has no I2S. |
-| HLK-LD2450 radar | `near`, `present`, `count`, where people stand | UART at 256000 baud | Nano 33 IoT | Hard. Tracks up to three people by position, through thin walls and in the dark. |
-| Load cell, 10 kg or 15 kg bar | `loaded`, `weight` | Needs an amplifier board (HX711 or NAU7802) | Nano | Moderate once the amplifier is in hand. Ask Mr. Reasy whether one is free before you plan on it. |
-
-Same rule as the shelf: the sensor gives a number and your State Table gives it a meaning. A radar `count` of 2 is two bodies in range, not a crowd that wants anything.
-## Credits 
-Adam Sochacki, Gabriel Everett, Marco Cericola, Face Sensor, https://flyinthelyceum.github.io/sensor-layer-starter/
+Each person owned one end-to-end link: reading the sensor, deciding the rule, or making the visible response.
