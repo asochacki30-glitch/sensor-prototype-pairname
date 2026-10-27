@@ -1,19 +1,19 @@
-// bench.ino: the Arduino half of a bench pair's sensor.
+// bench.ino: ultrasonic distance sensor for the bench prototype.
 //
-// It reads the sensor and prints one line per reading over USB, as name and
-// number pairs separated by spaces:
+// It prints one distance reading per line over USB in centimeters:
 //
 //   cm 42.5
-//   cm 41.9 light 612
+//   cm 21.4
 //
-// That is all it does. The meaning (the signals, the State Table, the piece) is
-// built in the browser by bench/sense-serial.js, the same as the camera pairs.
+// The meaning lives in the browser: bench/sense-serial.js turns the distance
+// into signals, and bench/table-bench.js decides whether the space is close,
+// present, or empty.
 //
-// Wired for an HC-SR04 ultrasonic sensor on an Arduino Nano:
+// Wiring for an HC-SR04 ultrasonic sensor on an Arduino Nano:
 //   VCC -> 5V    GND -> GND    TRIG -> D9    ECHO -> D10
-// To add a second sensor, read it in loop() and print it on the same line,
-// before the println, e.g. a photoresistor divider on A0:
-//   Serial.print(" light "); Serial.print(analogRead(A0));
+//
+// The sketch measures the echo delay and reports 400.0 cm when nothing is in
+// range, so the browser can treat it as a clear room rather than a broken wire.
 
 const int TRIG = 9;
 const int ECHO = 10;

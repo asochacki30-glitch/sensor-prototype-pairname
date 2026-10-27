@@ -12,12 +12,14 @@
 // Keep "nobody" last, so it catches everything the other rows miss.
 
 window.TABLE = {
-  // The HC-SR04 example. Replace these with your own signals and rows.
+  // The sensor notices whether the path in front of it is blocked or open.
+  // A hand, body, or object within about 60 cm counts as "blocked"; farther away
+  // than roughly 85 cm is treated as an open lane.
   signals: ['present', 'near'],
 
   states: [
-    { name: 'close',  when: s => s.near > 0.85,   hold: 0.5 },
-    { name: 'here',   when: s => s.present > 0.5, hold: 1 },
-    { name: 'nobody', when: s => s.present < 0.2, hold: 2 },
+    { name: 'blocked', when: s => s.near > 0.82,   hold: 0.5 },
+    { name: 'watching', when: s => s.present > 0.6, hold: 0.9 },
+    { name: 'open', when: s => s.present < 0.2,   hold: 1.5 },
   ],
 };
