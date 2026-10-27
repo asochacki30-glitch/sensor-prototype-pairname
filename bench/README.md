@@ -13,35 +13,35 @@ The sensor is an HC-SR04 ultrasonic distance module. It is the simplest shelf se
 | Trigger | D9 | TRIG |
 | Echo | D10 | ECHO |
 
-The sketch in `bench/bench.ino` triggers the sensor with a 10 µs pulse, measures the echo time, and prints `cm` values at 115200 baud. When nothing is in range, it reports `400.0 cm` so the browser can treat that as `nobody` instead of a broken connection.
+The sketch in `bench/bench.ino` triggers the sensor with a 10 µs pulse, measures the echo time, and prints `cm` values at 115200 baud. When nothing is in range, it reports `400.0 cm` so the browser can treat that as `open` instead of a broken connection.
 
 ## The rule
 
 Three real readings from the sensor:
 
-- 400.0 cm: empty room / nothing in front
-- 82.0 cm: a hand or body in the sensor zone
-- 26.5 cm: very close to the sensor
+- 400.0 cm: open path / nothing in front
+- 75.0 cm: a hand or body entering the zone
+- 28.5 cm: a near blockage right in front of the sensor
 
 State Table sentence:
 
-When the reading goes under 75 cm, the Nano switches into the close state and the browser response changes to a warning color; above 90 cm it stays clear.
+When the reading drops below 60 cm, the Nano marks the path as blocked and changes the response; when it rises above 85 cm, the lane is open again.
 
 This is the logic in `bench/table-bench.js`:
 
-- `close` when `near > 0.75` for 0.5 s
-- `here` when `present > 0.55` for 0.9 s
-- `nobody` when `present < 0.2` for 1.5 s
+- `blocked` when `near > 0.82` for 0.5 s
+- `watching` when `present > 0.6` for 0.9 s
+- `open` when `present < 0.2` for 1.5 s
 
-That produces a visible reaction while staying stable enough not to flicker when the echo wobbles at the threshold.
+That produces a distinct response while staying stable enough not to flicker when the echo wobbles at the threshold.
 
-Final verification: a hand at about 30 cm reads as `close`, a person at 80 cm reads as `here`, and an empty space at 400 cm remains `nobody`.
+Final verification: a hand at about 30 cm reads as `blocked`, a person at 75 cm reads as `watching`, and an empty space at 400 cm remains `open`.
 
 ## Output
 
-The response is visible in the browser using the same bench piece as the starter project. The color and size of the piece change based on the current state, so a visitor can tell immediately whether the sensor sees a close object or an empty space.
+The response is visible in the browser using the same bench piece as the starter project. The color and size of the piece change based on the current state, so a visitor can tell immediately whether the sensor sees a blocked path or an open space.
 
-This makes the machine notice one real thing about the world: whether a person is within the sensor zone.
+This makes the machine notice one real thing about the world: whether a path in front of it is being crossed or left empty.
 
 ## Break log
 
