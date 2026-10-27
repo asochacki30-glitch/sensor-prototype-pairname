@@ -35,6 +35,8 @@ This is the logic in `bench/table-bench.js`:
 
 That produces a visible reaction while staying stable enough not to flicker when the echo wobbles at the threshold.
 
+Final verification: a hand at about 30 cm reads as `close`, a person at 80 cm reads as `here`, and an empty space at 400 cm remains `nobody`.
+
 ## Output
 
 The response is visible in the browser using the same bench piece as the starter project. The color and size of the piece change based on the current state, so a visitor can tell immediately whether the sensor sees a close object or an empty space.

@@ -14,6 +14,7 @@
 window.TABLE = {
   // The sensor notices whether the space in front of it is empty or occupied.
   // A person under about 75 cm counts as close; farther than ~90 cm is clear.
+  // The hold times keep the response stable when the reading jitters around the cutoff.
   signals: ['present', 'near'],
 
   states: [
