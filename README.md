@@ -65,3 +65,13 @@ Nothing saves a frame or a landmark list. The model downloads once when you clic
 The instrument is MediaPipe Face Landmarker, pinned to version 1.1.1, the same one the Make a Face lab used.
 
 Status check note: this README was updated on 2026-10-23 to confirm the repository is not clean.
+
+## State Table
+
+| Name | Rule | LINE | GAP | Hold |
+|---|---|---:|---:|---:|
+| intruder | under 30 cm | 30 | 3 | 1 s |
+| hesitant | under 80 cm | 80 | 5 | 4 s |
+| nobody | over 80 cm | 80 | 5 | 5 s |
+
+The first true row wins once it has held long enough, so the narrow name sits above the wider one. The `nobody` row is the quiet-state fallback for the sensor when the path is clear again.
