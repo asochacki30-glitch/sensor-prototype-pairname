@@ -30,6 +30,7 @@ const int LED = 5;
 const float IGNORE_DISTANCE = 50.0;  // ignore anything farther than 50 cm
 const float NOTICE_LIMIT = 30.0;
 const float HEAR_LIMIT = 10.0;
+const unsigned long LED_INTERVAL = 1000;
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -38,6 +39,7 @@ const float HEAR_LIMIT = 10.0;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 bool ledOn = false;
+bool wasActive = false;
 unsigned long lastBlink = 0;
 
 void setup() {
@@ -89,15 +91,20 @@ void loop() {
     active = false;
   }
 
+  if (active != wasActive) {
+    wasActive = active;
+    ledOn = false;
+    lastBlink = millis();
+  }
+
   if (active) {
     unsigned long now = millis();
-    if (now - lastBlink >= 1000) {
+    if (now - lastBlink >= LED_INTERVAL) {
       ledOn = !ledOn;
       lastBlink = now;
     }
   } else {
     ledOn = false;
-    lastBlink = millis();
   }
 
   digitalWrite(LED, ledOn ? HIGH : LOW);
