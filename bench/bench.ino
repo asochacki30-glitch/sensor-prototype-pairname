@@ -97,14 +97,16 @@ void loop() {
     lastBlink = millis();
   }
 
-  if (active) {
+  if (!active) {
+    // Clear the LED immediately and leave no pending blink when a person leaves.
+    ledOn = false;
+    lastBlink = millis();
+  } else {
     unsigned long now = millis();
     if (now - lastBlink >= LED_INTERVAL) {
       ledOn = !ledOn;
       lastBlink = now;
     }
-  } else {
-    ledOn = false;
   }
 
   digitalWrite(LED, ledOn ? HIGH : LOW);
