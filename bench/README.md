@@ -25,17 +25,17 @@ Three real readings from the sensor:
 
 State Table sentence:
 
-When the reading drops below 60 cm, the Nano marks the path as blocked and changes the response; when it rises above 85 cm, the lane is open again.
+- Adam halved the blocked cutoff from 60 cm to 30 cm. When the reading drops below 30 cm, the Nano marks the path as blocked; when it rises above 85 cm, the lane is open again.
 
 This is the logic in `bench/table-bench.js`:
 
-- `blocked` when `near > 0.82` for 0.5 s
+- `blocked` when `near > 0.8947` (30 cm cutoff) for 0.5 s
 - `watching` when `present > 0.6` for 0.9 s
 - `open` when `present < 0.2` for 1.5 s
 
 That produces a distinct response while staying stable enough not to flicker when the echo wobbles at the threshold.
 
-Final verification: a hand at about 30 cm reads as `blocked`, a person at 75 cm reads as `watching`, and an empty space at 400 cm remains `open`.
+Final verification: a hand at about 30 cm reads as `blocked`, a person at 75 cm reads as `watching`, and an empty space at 400 cm remains `open`. The 30 cm cutoff is physically reachable by the HC-SR04 bench.
 
 ## Output
 
